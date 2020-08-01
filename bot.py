@@ -6,7 +6,8 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 OWNER = os.getenv('DISCORD_ADMIN_ID')
 PREFIX = os.getenv('BOT_PREFIX')
-bot = commands.Bot(command_prefix=PREFIX, description="A simple bot created to do countdowns for listening parties.")
+description = "A simple bot created to do countdowns for listening parties."
+bot = commands.Bot(command_prefix=PREFIX, description=description)
 
 
 def check_if_it_is_me(ctx):

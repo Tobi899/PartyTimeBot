@@ -48,7 +48,8 @@ class Partytime(commands.Cog):
 
     @commands.command(aliases=['cdb', 'countbar' 'partytimebar'],
                       brief="| A countdown for listening parties in bar chart style.",
-                      help="A countdown for listening parties in bar chart style. Set to 10 seconds.")
+                      help="A countdown for listening parties in bar chart style."
+                      " Set to 10 seconds.")
     async def countdownbar(self, ctx):
         msg_array = [":white_large_square:"] * 10
         msg_to_edit = await ctx.send("".join(msg_array))
