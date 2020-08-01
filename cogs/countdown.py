@@ -1,5 +1,5 @@
-import time
 from discord.ext import commands
+import asyncio
 
 
 def switch_countdown(argument):
@@ -13,13 +13,6 @@ def switch_countdown(argument):
         30: "30 Seconds left until countdown ends"
     }
     return switcher.get(argument, "don't send")
-
-
-def array_to_string(argument):
-    string = ""
-    for i in range(len(argument)):
-        string += argument[i]
-    return string
 
 
 class Partytime(commands.Cog):
@@ -48,7 +41,7 @@ class Partytime(commands.Cog):
                     elif arg <= 5:
                         await ctx.send(arg)
                     arg = arg - 1
-                    time.sleep(1)
+                    await asyncio.sleep(1)
 
         except ValueError:
             await ctx.send("Please enter an integer <=3600")
@@ -57,14 +50,12 @@ class Partytime(commands.Cog):
                       brief="| A countdown for listening parties in bar chart style.",
                       help="A countdown for listening parties in bar chart style. Set to 10 seconds.")
     async def countdownbar(self, ctx):
-        msg_array = []
-        for i in range(10):
-            msg_array.append(":white_large_square:")
-        msg_to_edit = await ctx.send(array_to_string(msg_array))
+        msg_array = [":white_large_square:"] * 10
+        msg_to_edit = await ctx.send("".join(msg_array))
         for i in range(10):
             msg_array[i] = ":red_square:"
-            await msg_to_edit.edit(content=array_to_string(msg_array))
-            time.sleep(1)
+            await msg_to_edit.edit(content="".join(msg_array))
+            await asyncio.sleep(1)
 
     @commands.command(aliases=['exit', 'reset'],
                       brief="| Stops the current countdown.",

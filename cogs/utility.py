@@ -5,7 +5,6 @@ from discord.ext import commands
 class Utility(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        abort = 0
 
     @commands.command(aliases=[],
                       brief="| Check if bot is operational.",
@@ -13,7 +12,8 @@ class Utility(commands.Cog):
     async def ping(self, ctx):
         await ctx.send("Pong!")
 
-    @commands.command(aliases=['roll'], brief="| Rolls a random number between 0 and the given integer.",
+    @commands.command(aliases=['roll'],
+                      brief="| Rolls a random number between 0 and the given integer.",
                       help="Rolls a random number between 0 and the given integer.")
     async def random(self, ctx, arg):
         try:
