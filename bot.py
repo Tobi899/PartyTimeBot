@@ -59,7 +59,7 @@ async def reload(ctx, extension):
              hidden=False)
 async def source(ctx):
     await ctx.send('GitHub link to the bots source code: '
-                    '<https://github.com/sprunq/PartyTimeBot>')
+                    'https://github.com/sprunq/PartyTimeBot')
 
 
 @bot.command(alias=['change_prefix'],
