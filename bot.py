@@ -57,7 +57,7 @@ async def reload(ctx, extension):
 @bot.command(brief="| Link to the bots source code.",
              help="Link to the bots source code.",
              hidden=False)
-async def source(ctx, extension):
+async def source(ctx):
     await ctx.send('GitHub link to the bots source code: '
                     '<https://github.com/sprunq/PartyTimeBot>')
 
