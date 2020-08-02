@@ -28,7 +28,7 @@ class Partytime(commands.Cog):
         self.abort = True
         try:
             arg = int(arg)
-            if arg >= 3600:
+            if arg > 3600:
                 await ctx.send("Please enter a valid integer")
             else:
                 while self.abort and arg >= 0:
