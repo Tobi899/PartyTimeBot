@@ -54,6 +54,14 @@ async def reload(ctx, extension):
         await ctx.send("Sorry but you don't have the authorization to execute this command")
 
 
+@bot.command(brief="| Link to the bots source code.",
+             help="Link to the bots source code.",
+             hidden=False)
+async def source(ctx, extension):
+    await ctx.send('GitHub link to the bots source code: '
+                    '<https://github.com/sprunq/PartyTimeBot>')
+
+
 @bot.command(alias=['change_prefix'],
              brief="| Admin command for changing the bot prefix.",
              help="Admin command for changing the bot prefix.",
