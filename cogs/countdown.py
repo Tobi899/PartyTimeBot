@@ -29,7 +29,7 @@ class Partytime(commands.Cog):
         try:
             arg = int(arg)
             if arg > 3600:
-                await ctx.send("Please enter a valid integer")
+                await ctx.send("Please enter a number <=3600")
             else:
                 while self.abort and arg >= 0:
                     if arg >= 30:
@@ -44,7 +44,7 @@ class Partytime(commands.Cog):
                     await asyncio.sleep(1)
 
         except ValueError:
-            await ctx.send("Please enter an integer <=3600")
+            await ctx.send("Please enter a number <=3600")
 
     @commands.command(aliases=['cdb', 'countbar' 'partytimebar'],
                       brief="| A countdown for listening parties in bar chart style.",
