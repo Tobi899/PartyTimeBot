@@ -81,4 +81,8 @@ for filename in os.listdir('./cogs'):
         bot.load_extension(f'cogs.{filename[:-3]}')
 
 
+activity = discord.Game(name=">>help")
+            await bot.change_presence(status=discord.Status.online, activity=activity)
+
+
 bot.run(TOKEN)
