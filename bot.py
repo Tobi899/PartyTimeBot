@@ -1,3 +1,4 @@
+import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 import os
@@ -7,6 +8,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 OWNER = os.getenv('DISCORD_ADMIN_ID')
 PREFIX = os.getenv('BOT_PREFIX')
 description = "A simple bot created to do countdowns for listening parties."
+activity = discord.Game(name=">>help")
 bot = commands.Bot(command_prefix=PREFIX, description=description)
 
 
@@ -16,6 +18,7 @@ def check_if_it_is_me(ctx):
 
 @bot.event
 async def on_ready():
+    await bot.change_presence(status=discord.Status.online, activity=activity)
     print(f'Logged in as {bot.user.name} ({bot.user.id})')
     print('------------------------')
 
@@ -80,8 +83,5 @@ for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         bot.load_extension(f'cogs.{filename[:-3]}')
 
-
-activity = discord.Game(name=">>help")
-bot.change_presence(status=discord.Status.online, activity=activity)
 
 bot.run(TOKEN)
