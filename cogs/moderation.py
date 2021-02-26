@@ -49,14 +49,18 @@ class Moderation(commands.Cog):
         member = ctx.author
         mute_role = get(member.guild.roles, id=SNOOZE_ID) # Snooze
         uos_role = get(member.guild.roles, id=UOS_ID)
-        with open('uos_users.data', 'rb') as filehandle:
-            try:
-                uos_member_list = pickle.load(filehandle)
-            except EOFError:
-                uos_member_list = []
-            if member.id in uos_member_list:
-                uos_member_list.remove(member.id)
-                await member.add_roles(uos_role)
+        try:
+            with open('uos_users.data', 'rb') as filehandle:
+                try:
+                    uos_member_list = pickle.load(filehandle)
+                except EOFError:
+                    uos_member_list = []
+                if member.id in uos_member_list:
+                    uos_member_list.remove(member.id)
+                    await member.add_roles(uos_role)
+        except FileNotFoundError:
+            # File doesn't exist
+            uos_member_list = []
 
         with open('uos_users.data', 'wb') as filehandle:
             pickle.dump(uos_member_list, filehandle)
