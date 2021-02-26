@@ -54,6 +54,7 @@ class Moderation(commands.Cog):
                 try:
                     uos_member_list = pickle.load(filehandle)
                 except EOFError:
+                    # Empty file
                     uos_member_list = []
                 if member.id in uos_member_list:
                     uos_member_list.remove(member.id)
