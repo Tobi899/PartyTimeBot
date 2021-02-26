@@ -24,16 +24,19 @@ class Moderation(commands.Cog):
         for role in member_roles:
             if role.id == UOS_ID: # UoS
                 uos_role = get(member.guild.roles, id=UOS_ID) # UoS
-                uos_member_list = []
-                with open('uos_users.data', 'rb') as filehandle:
-                    try:
-                        uos_member_list = pickle.load(filehandle)
-                    except EOFError:
-                        uos_member_list = []
-                    # Remove duplicates
-                    uos_member_list.append(member.id)
-                    uos_member_list = list(dict.fromkeys(uos_member_list))
-
+                try:
+                    with open('uos_users.data', 'rb') as filehandle:
+                        try:
+                            uos_member_list = pickle.load(filehandle)
+                        except EOFError:
+                            # Empty file
+                            uos_member_list = []
+                        # Remove duplicates
+                        uos_member_list.append(member.id)
+                        uos_member_list = list(dict.fromkeys(uos_member_list))
+                except FileNotFoundError:
+                    # File doesn't exist
+                    uos_member_list = []
                 with open('uos_users.data', 'wb') as filehandle:
                     pickle.dump(uos_member_list, filehandle)
                 await member.remove_roles(uos_role)
