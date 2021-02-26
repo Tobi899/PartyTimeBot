@@ -1,5 +1,5 @@
 # PartyTimeBot
-A very basic Discord bot which mainly features a normal countdown and a bar chart style countdown.
+A very basic custom Discord bot for a music Discord server.
 
 __Needs .env file or environment variables with these keys:__
 ```text
