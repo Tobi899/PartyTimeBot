@@ -1,71 +1,46 @@
 from discord.ext import commands
 from discord.utils import get
-import pickle
-import os
 from dotenv import load_dotenv
+import os
 load_dotenv()
 SNOOZE_ID = int(os.getenv('SNOOZE_ROLE_ID'))
 UOS_ID = int(os.getenv('UOS_ROLE_ID'))
 
-
 class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        uos_member_list = []
+        self.has_UoS_role = []
 
     @commands.command(aliases=['selfmute'],
                       brief="| Mute yourself.",
                       help="Mutes the user.")
     async def mute(self, ctx):
         member = ctx.author
-        mute_role = get(member.guild.roles, id=SNOOZE_ID) # Snooze
+        mute_role = get(member.guild.roles, id=SNOOZE_ID)
+        uos_role = get(member.guild.roles, id=UOS_ID)
         member_roles = member.roles
 
         for role in member_roles:
-            if role.id == UOS_ID: # UoS
-                uos_role = get(member.guild.roles, id=UOS_ID) # UoS
-                try:
-                    with open('uos_users.data', 'rb') as filehandle:
-                        try:
-                            uos_member_list = pickle.load(filehandle)
-                        except EOFError:
-                            # Empty file
-                            uos_member_list = []
-                        # Remove duplicates
-                        uos_member_list.append(member.id)
-                        uos_member_list = list(dict.fromkeys(uos_member_list))
-                except FileNotFoundError:
-                    # File doesn't exist
-                    uos_member_list = []
-                with open('uos_users.data', 'wb') as filehandle:
-                    pickle.dump(uos_member_list, filehandle)
+            if role == uos_role:
+                self.has_UoS_role.append(member.id)
                 await member.remove_roles(uos_role)
         await member.add_roles(mute_role)
+        await ctx.send(f"Muted {member}")
+
 
     @commands.command(aliases=[],
                       brief="| Unmute yourself.",
                       help="Unmutes the user.")
     async def unmute(self, ctx):
         member = ctx.author
-        mute_role = get(member.guild.roles, id=SNOOZE_ID) # Snooze
+        mute_role = get(member.guild.roles, id=SNOOZE_ID)
         uos_role = get(member.guild.roles, id=UOS_ID)
-        try:
-            with open('uos_users.data', 'rb') as filehandle:
-                try:
-                    uos_member_list = pickle.load(filehandle)
-                except EOFError:
-                    # Empty file
-                    uos_member_list = []
-                if member.id in uos_member_list:
-                    uos_member_list.remove(member.id)
-                    await member.add_roles(uos_role)
-        except FileNotFoundError:
-            # File doesn't exist
-            uos_member_list = []
 
-        with open('uos_users.data', 'wb') as filehandle:
-            pickle.dump(uos_member_list, filehandle)
+        if member.id in self.has_UoS_role:
+            self.has_UoS_role.remove(member.id)
+            await member.add_roles(uos_role)
         await member.remove_roles(mute_role)
+        await ctx.send(f"Unmuted {member}")
 
 
 def setup(bot):
