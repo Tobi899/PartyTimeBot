@@ -26,7 +26,8 @@ class Moderation(commands.Cog):
         self.c = self.db.cursor()
 
         # Create mute table if it doesn't exist
-        self.c.execute(''' SELECT count(name) FROM sqlite_master WHERE type='table' AND name='mute' ''')
+        self.c.execute(
+            ''' SELECT count(name) FROM sqlite_master WHERE type='table' AND name='mute' ''')
         if self.c.fetchone()[0] == 1:
             print("Database exists")
         else:
@@ -40,7 +41,6 @@ class Moderation(commands.Cog):
             print("Database created")
         self.db.commit()
 
-
     @commands.command(aliases=["selfmute"],
                       brief="| Mute yourself.",
                       help=f"Mutes the user.\n\
@@ -50,12 +50,16 @@ class Moderation(commands.Cog):
                       Examples: >>mute \n\
                                 >>mute 4 d\n\
                                 >>mute 6 w false"
-                    )
-    async def mute(self, ctx, timeframe = None, unit = None, allow_self_unmute = "True"):
+                      )
+    async def mute(self, ctx, timeframe=None, unit=None, allow_self_unmute="True"):
         member = ctx.author
         # Get roles
         mute_role = get(member.guild.roles, id=self.mute_role_id)
         uos_role = get(member.guild.roles, id=self.uos_role_id)
+
+        if mute_role in member.roles:
+            await ctx.send("You are already muted. Please wait for your unmute to finish or >>unmute")
+            return
 
         # Args processing
         if all(v is not None for v in [timeframe, unit, allow_self_unmute]):
@@ -95,18 +99,18 @@ class Moderation(commands.Cog):
         # Remove all previously existing entries with the member_id from the db
         self.c.execute("""DELETE FROM mute
                             WHERE member_id = :member_id""",
-                            {'member_id': member.id,})
+                       {'member_id': member.id, })
 
         # Add new db entry
         self.c.execute("""INSERT INTO mute
                             VALUES (:mute_id, :member_id, :unmute_date_unix,
                             :has_uos_role, :allow_self_unmute)""",
-                            {'mute_id': None,
-                            'member_id': member.id,
-                            'unmute_date_unix': unmute_date_unix,
-                            'has_uos_role': has_uos_role,
-                            'allow_self_unmute': allow_self_unmute
-                            })
+                       {'mute_id': None,
+                        'member_id': member.id,
+                        'unmute_date_unix': unmute_date_unix,
+                        'has_uos_role': has_uos_role,
+                        'allow_self_unmute': allow_self_unmute
+                        })
         self.db.commit()
         await member.add_roles(mute_role)
         if timeframe == None or unit == None:
@@ -117,7 +121,6 @@ class Moderation(commands.Cog):
         if mute_unit != "unlimited":
             await asyncio.sleep(sleep_duration)
             await self.unmute(ctx=ctx, member_id=member.id, override=True)
-
 
     @commands.command(aliases=["selfunmute"],
                       brief="| Unmute yourself.",
@@ -134,11 +137,10 @@ class Moderation(commands.Cog):
         mute_role = get(member.guild.roles, id=self.mute_role_id)
         uos_role = get(member.guild.roles, id=self.uos_role_id)
 
-
         self.c.execute("SELECT * FROM mute WHERE member_id=?", (member.id,))
         res = self.c.fetchall()
         if len(res) <= 0:
-            await ctx.send("User not muted")
+            # await ctx.send("User not muted")
             return
         mute_id = res[0][0]
         member_id = res[0][1]
@@ -150,7 +152,7 @@ class Moderation(commands.Cog):
                 await ctx.send("Self unmute disabled. If you want in regardless message Pingu or sprung")
                 return
         else:
-            if ctx.message.author.id != self.OWNER and ctx != None:
+            if ctx.message.author.id != self.OWNER:
                 await ctx.send("You don't have the permission to unmute other users")
                 return
 
@@ -159,13 +161,12 @@ class Moderation(commands.Cog):
             await member.add_roles(uos_role)
         self.c.execute("""DELETE FROM mute
                             WHERE member_id = :member_id""",
-                            {'member_id': member.id,})
+                       {'member_id': member.id, })
         self.db.commit()
         if ctx != None:
             await ctx.send(f"Unmuted {member}")
 
-
-    @commands.command(aliases=["restartUnmute"],
+    @commands.command(aliases=["restartUnmute", "sumt"],
                       brief="Restarts auto unmute timers",
                       help="Restarts auto unmute timers.",
                       hidden=True)
@@ -185,6 +186,7 @@ class Moderation(commands.Cog):
         # Get relative time until time_end for closest timestamp and sleep for that long
         # Unmute after sleep end
         # Repeat for each element
+
         def getUnixKey(elem):
             return elem[2]
         res.sort(key=getUnixKey)
@@ -196,9 +198,8 @@ class Moderation(commands.Cog):
             relative_time_in_secs = time_end - time_now
             if relative_time_in_secs > 0:
                 await asyncio.sleep(relative_time_in_secs)
-            await self.unmute(ctx=None, member_id=entry[1], override=True)
+            await self.unmute(ctx=ctx, member_id=entry[1], override="True")
             print(f"Unmuted {entry[1]}")
-
 
     @commands.command(aliases=["pdb"],
                       brief="-",
@@ -213,19 +214,19 @@ class Moderation(commands.Cog):
             e_uos = "True" if entry[3] else "False"
             e_asu = "True" if entry[4] else "False"
             string += f"[Mute ID: {entry[0]}, Member ID: {entry[1]}, Unmute Unix: {entry[2]} ({rel_time} hrs), " \
-             + f"Has Uos Role: {e_uos}, Allow Self Unmute: {e_asu}]\n"
+                + f"Has Uos Role: {e_uos}, Allow Self Unmute: {e_asu}]\n"
         await ctx.send("```Muted users:\n" + string + "```")
 
     def getSleepDuration(self, time_arg, mute_unit):
         # Calculate mute duration
         if mute_unit == "m":
-            sleep_time = float(time_arg) * 60 # Minutes
+            sleep_time = float(time_arg) * 60  # Minutes
         elif mute_unit == "h":
-            sleep_time = float(time_arg) * 60 * 60 # Hours
+            sleep_time = float(time_arg) * 60 * 60  # Hours
         elif mute_unit == "d":
-            sleep_time = float(time_arg) * 60 * 60 * 24 # Days
+            sleep_time = float(time_arg) * 60 * 60 * 24  # Days
         elif mute_unit == "w":
-            sleep_time = float(time_arg) * 60 * 60 * 24 * 7 # Weeks
+            sleep_time = float(time_arg) * 60 * 60 * 24 * 7  # Weeks
         elif mute_unit == "unlimited":
             sleep_time = -1
         return int(sleep_time)
@@ -235,6 +236,7 @@ class Moderation(commands.Cog):
         if timesptamp > 9223372036854775807 or mute_duration == -1:
             timesptamp = 9223372036854775807
         return timesptamp
+
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
