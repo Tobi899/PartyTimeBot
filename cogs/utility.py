@@ -1,5 +1,6 @@
-import random
 from discord.ext import commands
+import random
+import logging
 
 
 class Utility(commands.Cog):
@@ -11,6 +12,7 @@ class Utility(commands.Cog):
                       help="Check if bot is operational.")
     async def ping(self, ctx):
         await ctx.send("Pong!")
+        logging.info('Pong successful.')
 
     @commands.command(aliases=['roll'],
                       brief="| Rolls a random number between 0 and the given integer.",
@@ -19,8 +21,10 @@ class Utility(commands.Cog):
         try:
             arg = int(arg)
             await ctx.send(f"You rolled a {str(random.randrange(0, arg))}")
+            logging.info('Random with max digit count %s.', len(str(arg)))
         except ValueError:
             await ctx.send("Please enter a valid number")
+            logging.error('Random with max digit count %s failed. Arg: %s', len(str(arg)), arg)
 
 
 def setup(bot):

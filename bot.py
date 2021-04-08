@@ -1,7 +1,10 @@
-import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+import datetime
+import logging
+import discord
 import os
+
 load_dotenv()
 
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -10,51 +13,48 @@ PREFIX = os.getenv('BOT_PREFIX')
 description = "A simple bot created to do countdowns for listening parties."
 activity = discord.Game(name=">>help")
 bot = commands.Bot(command_prefix=PREFIX, description=description)
-
-
-def check_if_it_is_me(ctx):
-    return str(ctx.message.author.id) == OWNER
+ts = datetime.datetime.now()
+date = str(ts.strftime("%Y.%m.%d.%H.%M"))
+logging.basicConfig(filename=f'{date}.log', filemode='w', format='%(asctime)s %(levelname)-8s [%(filename)s:%(funcName)s] %(message)s',
+    datefmt='%Y-%m-%d:%H:%M:%S',
+    level=logging.INFO)
 
 
 @bot.event
 async def on_ready():
     await bot.change_presence(status=discord.Status.online, activity=activity)
-    print(f'Logged in as {bot.user.name} ({bot.user.id})')
-    print('------------------------')
+    logging.info('Logged in as %s (%s).', bot.user.name, bot.user.id)
 
 
 @bot.command(brief="| Admin command for loading new cog extensions.",
              help="Admin command for loading new cog extensions.",
              hidden=True)
+@commands.is_owner()
 async def load(ctx, extension):
-    if check_if_it_is_me(ctx):
-        bot.load_extension(f'cogs.{extension}')
-        await ctx.send(f'Loading of {extension} successful')
-    else:
-        await ctx.send("Sorry but you don't have the authorization to execute this command")
+    bot.load_extension(f'cogs.{extension}')
+    logging.info('Loaded extension %s.', extension)
+    await ctx.send(f'Loading of {extension} successful')
 
 
 @bot.command(brief="| Admin command for unloading cog extensions.",
              help="Admin command for unloading cog extensions.",
              hidden=True)
+@commands.is_owner()
 async def unload(ctx, extension):
-    if check_if_it_is_me(ctx):
-        bot.unload_extension(f'cogs.{extension}')
-        await ctx.send(f'Unloading of {extension} successful')
-    else:
-        await ctx.send("Sorry but you don't have the authorization to execute this command")
+    bot.unload_extension(f'cogs.{extension}')
+    logging.info('Unloaded extension %s.', extension)
+    await ctx.send(f'Unloading of {extension} successful')
 
 
 @bot.command(brief="| Admin command for reloading cog extensions.",
              help="Admin command for reloading cog extensions.",
              hidden=True)
+@commands.is_owner()
 async def reload(ctx, extension):
-    if check_if_it_is_me(ctx):
-        bot.unload_extension(f'cogs.{extension}')
-        bot.load_extension(f'cogs.{extension}')
-        await ctx.send(f'Reload of {extension} successful')
-    else:
-        await ctx.send("Sorry but you don't have the authorization to execute this command")
+    bot.unload_extension(f'cogs.{extension}')
+    bot.load_extension(f'cogs.{extension}')
+    logging.info('Reloaded extension %s.', extension)
+    await ctx.send(f'Reload of {extension} successful')
 
 
 @bot.command(brief="| Link to the bots source code.",
@@ -63,25 +63,25 @@ async def reload(ctx, extension):
 async def source(ctx):
     await ctx.send('GitHub link to the bots source code: '
                     'https://github.com/sprunq/PartyTimeBot')
+    logging.info('Sent source link.')
 
 
 @bot.command(alias=['change_prefix'],
              brief="| Admin command for changing the bot prefix.",
              help="Admin command for changing the bot prefix.",
              hidden=False)
+@commands.is_owner()
 async def prefix(ctx, arg: str):
-    if check_if_it_is_me(ctx):
-        global PREFIX
-        bot.command_prefix = arg
-        os.putenv('BOT_PREFIX', arg)
-        PREFIX = os.getenv('BOT_PREFIX')
-        await ctx.send(f'Prefix changed to {arg}')
-    else:
-        await ctx.send("Sorry but you don't have the authorization to execute this command")
+    global PREFIX
+    bot.command_prefix = arg
+    os.putenv('BOT_PREFIX', arg)
+    PREFIX = os.getenv('BOT_PREFIX')
+    await ctx.send(f'Prefix changed to {arg}')
+    logging.info('Changed prefix to %s.', arg)
 
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         bot.load_extension(f'cogs.{filename[:-3]}')
-
+        logging.info('Loaded extension %s.', filename[:-3])
 
 bot.run(TOKEN)
