@@ -8,6 +8,10 @@ import time
 import os
 import re
 import sqlite3
+try:
+    import httplib
+except:
+    import http.client as httplib
 
 
 class Moderation(commands.Cog):
@@ -36,10 +40,34 @@ class Moderation(commands.Cog):
             logging.info('Created Database table')
         self.database.commit()
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        logging.info("Auto unmute started.")
+        try:
+            self.cursor.execute("SELECT * FROM mute")
+            res = self.cursor.fetchall()
+            if len(res) <= 0:
+                return
+
+            def getUnixKey(elem):
+                return elem[2]
+            res.sort(key=getUnixKey)
+            for entry in res:
+                logging.info("Auto unmute started for: [%s, %s, %s, %s] ", entry[0], entry[1], entry[2], entry[3])
+                time_end = entry[2]
+                time_now = int(time.time())
+                rel_time = time_end - time_now
+                if rel_time > 0:
+                    await asyncio.sleep(rel_time)
+                await self.internalUnmute(entry[1], entry[0])
+            logging.info("Auto unmute finished.")
+        except Exception as Argument:
+            logging.exception("Error occured in autoUnmute")
+
     @commands.command(aliases=["addentry", "add"],
-                      brief="| -",
-                      help=f"-"
-                      )
+                      brief="| Add user to DB.",
+                      help=f"Add user to DB.",
+                      hidden=True)
     @commands.is_owner()
     async def addToDb(self, ctx, member_id, unmute_date_unix, has_uos_role):
         logging.info('%s trying to add to DB: [%s, %s]', member_id, unmute_date_unix, has_uos_role)
@@ -54,9 +82,9 @@ class Moderation(commands.Cog):
             logging.error("%s can't add to DB. Types do not match: [%s, %s]", member_id, unmute_date_unix, has_uos_role)
 
     @commands.command(aliases=["removeentry", "rem"],
-                      brief="| -",
-                      help=f"-"
-                      )
+                      brief="| Remove user from DB.",
+                      help=f"Remove User from DB.",
+                      hidden=True)
     @commands.is_owner()
     async def removeFromDb(self, ctx, member_id):
         logging.info('Trying to delete from DB: [%s]', member_id)
@@ -173,34 +201,6 @@ class Moderation(commands.Cog):
         except Exception as Argument:
             logging.exception("Error occured while trying to unmute %s", mute.id)
 
-    @commands.command(aliases=["restartUnmute", "sumt"],
-                      brief="Restarts auto unmute timers",
-                      help="Restarts auto unmute timers.",
-                      hidden=True)
-    @commands.is_owner()
-    async def startAutoUnmute(self, ctx):
-        logging.info("Auto unmute started.")
-        try:
-            self.cursor.execute("SELECT * FROM mute")
-            res = self.cursor.fetchall()
-            if len(res) <= 0:
-                return
-
-            def getUnixKey(elem):
-                return elem[2]
-            res.sort(key=getUnixKey)
-            for entry in res:
-                logging.info("Auto unmute started for: [%s, %s, %s, %s] ", entry[0], entry[1], entry[2], entry[3])
-                time_end = entry[2]
-                time_now = int(time.time())
-                rel_time = time_end - time_now
-                if rel_time > 0:
-                    await asyncio.sleep(rel_time)
-                await self.internalUnmute(entry[1], entry[0])
-            logging.info("Auto unmute finished.")
-        except Exception as Argument:
-            logging.exception("Error occured in autoUnmute")
-
     @commands.command(aliases=["pdb"],
                       brief="-",
                       help="Prints the DB",
@@ -229,6 +229,9 @@ class Moderation(commands.Cog):
 
     async def internalUnmute(self, member_id, call_mute_id):
         logging.info("InternalUnmute started: %s", member_id)
+        while not self.internetConnAvailable():
+            await asyncio.sleep(300)
+            logging.error("No internet connection available for %s", member_id)
         try:
             guild = await self.bot.fetch_guild(self.GUILD_ID)
             member = await guild.fetch_member(member_id)
@@ -296,6 +299,16 @@ class Moderation(commands.Cog):
                             })
         self.database.commit()
         logging.info('%s added to DB: [%s, %s]', member_id, unix_time_end, has_uos_role)
+
+    def internetConnAvailable(self):
+        conn = httplib.HTTPConnection("www.google.com", timeout=5)
+        try:
+            conn.request("HEAD", "/")
+            conn.close()
+            return True
+        except:
+            conn.close()
+            return False
 
 
 def setup(bot):
