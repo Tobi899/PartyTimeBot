@@ -1,2 +1,13 @@
 # PartyTimeBot
-A very basic custom Discord bot for a music Discord server.
+A basic Discord bot with python
+
+## Features:
+- Selfmutes
+  - timed
+  - unlimited
+- Countdowns:
+  - normal
+  - bar
+- Utility
+  - random
+  - ping
