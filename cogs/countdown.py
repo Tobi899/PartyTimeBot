@@ -48,7 +48,7 @@ class Partytime(commands.Cog):
             await ctx.send("Please enter a number <=3600")
             logging.error('Invalid number %s.', arg)
 
-    @commands.command(aliases=['cdb', 'countbar' 'partytimebar'],
+    @commands.command(aliases=['cdb', 'cbd','countbar' 'partytimebar', 'elsegetyourshittogether'],
                       brief="| A countdown for listening parties in bar chart style.",
                       help="A countdown for listening parties in bar chart style."
                       " Set to 10 seconds.")

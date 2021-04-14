@@ -53,7 +53,8 @@ class Moderation(commands.Cog):
                 return elem[2]
             res.sort(key=getUnixKey)
             for entry in res:
-                logging.info("Auto unmute started for: [%s, %s, %s, %s] ", entry[0], entry[1], entry[2], entry[3])
+                logging.info(
+                    "Auto unmute started for: [%s, %s, %s, %s] ", entry[0], entry[1], entry[2], entry[3])
                 time_end = entry[2]
                 time_now = int(time.time())
                 rel_time = time_end - time_now
@@ -70,7 +71,8 @@ class Moderation(commands.Cog):
                       hidden=True)
     @commands.is_owner()
     async def addToDb(self, ctx, member_id, unmute_date_unix, has_uos_role):
-        logging.info('%s trying to add to DB: [%s, %s]', member_id, unmute_date_unix, has_uos_role)
+        logging.info(
+            '%s trying to add to DB: [%s, %s]', member_id, unmute_date_unix, has_uos_role)
         try:
             member_id = int(member_id)
             unmute_date_unix = int(unmute_date_unix)
@@ -79,7 +81,8 @@ class Moderation(commands.Cog):
             await ctx.send(f"Added {member_id} to db ({unmute_date_unix}, {has_uos_role})")
         except ValueError:
             await ctx.send("Arguments don't match the types")
-            logging.error("%s can't add to DB. Types do not match: [%s, %s]", member_id, unmute_date_unix, has_uos_role)
+            logging.error(
+                "%s can't add to DB. Types do not match: [%s, %s]", member_id, unmute_date_unix, has_uos_role)
 
     @commands.command(aliases=["removeentry", "rem"],
                       brief="| Remove user from DB.",
@@ -94,17 +97,12 @@ class Moderation(commands.Cog):
             await ctx.send(f"Removed {member_id} from db")
         except ValueError:
             await ctx.send("Argument doesn't match the type")
-            logging.error("Can't delete from DB. Type does not match: [%s]", member_id)
+            logging.error(
+                "Can't delete from DB. Type does not match: [%s]", member_id)
 
     @commands.command(aliases=["selfmute"],
                       brief="| Mute yourself.",
-                      help=f"Mutes the user.\n\
-                      Syntax: >>mute [time] [unit] [allow self unmute]\n\
-                      Unit args: [s, m, d, w] \n\
-                      Self Unmute args: [true, t, yes, y, false, f, no, n] \n\
-                      Examples: >>mute \n\
-                                >>mute 4 d\n\
-                                >>mute 6 w false"
+                      help=f"Mutes the user.\nUnit args: [s, m, d, w] \n"
                       )
     async def mute(self, ctx, timeframe=None, unit=None):
         try:
@@ -122,17 +120,19 @@ class Moderation(commands.Cog):
             # Args processing
             if timeframe is not None and unit is not None:
                 valid_time = re.match(r"([0-9]*[.])?[0-9]+", timeframe)
-                valid_unit = re.match(r"([m|h|d|w]{1})", unit)
+                valid_unit = re.match(r"([s|m|h|d|w]{1})", unit)
                 if valid_time and valid_unit:
                     time_arg = timeframe
                     mute_unit = unit
                 else:
                     await ctx.send("Arguments not recognized")
-                    logging.error('%s arguments not recognized [%s, %s]', member.id, timeframe, unit)
+                    logging.error(
+                        '%s arguments not recognized [%s, %s]', member.id, timeframe, unit)
                     return
             elif timeframe is not None and unit is None:
                 await ctx.send("Arguments not recognized")
-                logging.error('%s arguments not recognized [%s, %s]', member.id, timeframe, unit)
+                logging.error(
+                    '%s arguments not recognized [%s, %s]', member.id, timeframe, unit)
                 return
             else:
                 # No args given
@@ -169,7 +169,8 @@ class Moderation(commands.Cog):
                 await asyncio.sleep(sleep_duration)
                 await self.internalUnmute(member.id, mute_id)
         except Exception as Argument:
-            logging.exception("Error occured while trying to mute %s", member.id)
+            logging.exception(
+                "Error occured while trying to mute %s", member.id)
 
     @commands.command(aliases=["selfunmute"],
                       brief="| Unmute yourself.",
@@ -182,7 +183,8 @@ class Moderation(commands.Cog):
             mute_role = get(member.guild.roles, id=self.MUTE_ROLE_ID)
             uos_role = get(member.guild.roles, id=self.UOS_ROLE_ID)
 
-            self.cursor.execute("SELECT * FROM mute WHERE member_id=?", (member.id,))
+            self.cursor.execute(
+                "SELECT * FROM mute WHERE member_id=?", (member.id,))
             res = self.cursor.fetchall()
             if len(res) <= 0:
                 await ctx.send("I can't find you in my database. Please message the staff or sprung")
@@ -199,7 +201,8 @@ class Moderation(commands.Cog):
                 await ctx.send(f"Unmuted {member}")
                 logging.info("%s unmuted", member.id)
         except Exception as Argument:
-            logging.exception("Error occured while trying to unmute %s", mute.id)
+            logging.exception(
+                "Error occured while trying to unmute %s", mute.id)
 
     @commands.command(aliases=["pdb"],
                       brief="-",
@@ -241,14 +244,16 @@ class Moderation(commands.Cog):
         mute_role = get(member.guild.roles, id=self.MUTE_ROLE_ID)
         uos_role = get(member.guild.roles, id=self.UOS_ROLE_ID)
 
-        self.cursor.execute("SELECT * FROM mute WHERE member_id=?", (member.id,))
+        self.cursor.execute(
+            "SELECT * FROM mute WHERE member_id=?", (member.id,))
         res = self.cursor.fetchone()
         if len(res) <= 0:
             return
 
         mute_id_now = res[0]
         if call_mute_id != mute_id_now:
-            logging.error("Mute_Ids not matching [%s, %s]", call_mute_id, mute_id_now)
+            logging.error(
+                "Mute_Ids not matching [%s, %s]", call_mute_id, mute_id_now)
             return
 
         has_uos_role = res[3]
@@ -260,7 +265,9 @@ class Moderation(commands.Cog):
 
     def getSleepDuration(self, time_arg, mute_unit):
         # Calculate mute duration
-        if mute_unit == "m":
+        if mute_unit == "s":
+            sleep_time = float(time_arg)
+        elif mute_unit == "m":
             sleep_time = float(time_arg) * 60  # Minutes
         elif mute_unit == "h":
             sleep_time = float(time_arg) * 60 * 60  # Hours
@@ -284,7 +291,7 @@ class Moderation(commands.Cog):
     def removeUserFromDB(self, member_id):
         self.cursor.execute("""DELETE FROM mute
                             WHERE member_id = :member_id""",
-                       {'member_id': member_id, })
+                            {'member_id': member_id, })
         self.database.commit()
         logging.info('%s removed from DB', member_id)
 
@@ -292,13 +299,14 @@ class Moderation(commands.Cog):
         self.cursor.execute("""INSERT INTO mute
                             VALUES (:mute_id, :member_id, :unmute_date_unix,
                             :has_uos_role)""",
-                           {'mute_id': None,
-                            'member_id': member_id,
-                            'unmute_date_unix': unix_time_end,
-                            'has_uos_role': has_uos_role,
-                            })
+                            {'mute_id': None,
+                             'member_id': member_id,
+                             'unmute_date_unix': unix_time_end,
+                             'has_uos_role': has_uos_role,
+                             })
         self.database.commit()
-        logging.info('%s added to DB: [%s, %s]', member_id, unix_time_end, has_uos_role)
+        logging.info('%s added to DB: [%s, %s]',
+                     member_id, unix_time_end, has_uos_role)
 
     def internetConnAvailable(self):
         conn = httplib.HTTPConnection("www.google.com", timeout=5)
