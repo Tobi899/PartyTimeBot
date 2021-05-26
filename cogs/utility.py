@@ -87,8 +87,9 @@ class Utility(commands.Cog):
         return url, permalink
 
     @commands.command(aliases=["animal", "haj"],
-                      brief="| Get cute animal pictures.",
-                      help="Get cute animal pictures.")
+                      brief="| Get cute (and not so cute) animal pictures.",
+                      help="Supported search terms:\n"
+                           "Bird, Quokka, Possum, Cat, Axolotl, Blahaj, Red Panda")
     async def img(self, ctx, *, arg):
         logging.info('Running image for %s', arg)
         accepted_terms = {"bird": ["birds", "birdpics"],
