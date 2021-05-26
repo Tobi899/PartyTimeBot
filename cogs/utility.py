@@ -102,9 +102,11 @@ class Utility(commands.Cog):
                           "red panda": ["redpandas"]
                           }
         try:
-            if arg.lower() in accepted_terms:
+            arg = arg.lower()
+            if arg in accepted_terms:
                 if random.randint(0, 3) == 0:
-                    arg = "blahaj" if arg.lower() == "haj" else arg
+                    if arg == "haj":
+                        arg = "blahaj"
                     url, permalink = await self.getFlickrImage(arg)
                 else:
                     sub = random.choice(accepted_terms[arg])
