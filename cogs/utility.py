@@ -86,7 +86,7 @@ class Utility(commands.Cog):
 
         return url, permalink
 
-    @commands.command(aliases=["animal", "haj"],
+    @commands.command(aliases=["animal"],
                       brief="| Get cute (and not so cute) animal pictures.",
                       help="Supported search terms:\n"
                            "Bird, Quokka, Possum, Cat, Axolotl, Blahaj, Red Panda")
@@ -98,6 +98,7 @@ class Utility(commands.Cog):
                           "cat": ["cats", "catsareliquid", "illegallysmolcats", "tightpussy", "blurrycats"],
                           "axolotl": ["axolotls"],
                           "blahaj": ["blahaj"],
+                          "haj": ["blahaj"],
                           "red panda": ["redpandas"]
                           }
         try:
