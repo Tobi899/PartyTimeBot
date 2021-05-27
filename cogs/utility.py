@@ -1,11 +1,47 @@
 import logging
 import os
 import random
+from difflib import get_close_matches
 
 import discord
 import asyncpraw
 from discord.ext import commands
 from flickrapi import FlickrAPI
+
+nl = "\n"
+accepted_terms = {"axolotl": ["axolotls"],
+                  "bear": ["bear", "bears", "bearwithaview"],
+                  "bee": ["bees"],
+                  "bird": ["birds", "birdpics", "BirdPhotography", "titsorgtfo"],
+                  "blahaj": ["blahaj"],
+                  "capybara": ["capybara"],
+                  "cat": ["cats", "catsareliquid", "illegallysmolcats", "tightpussy", "blurrycats",
+                          "tuckedinkitties", "CatsInBusinessAttire"],
+                  "crocodile": ["crocodiles"],
+                  "dog": ["dogs", "dogpictures", "dogswithjobs", "puppies", "shiba", "dog"],
+                  "elephant": ["Elephants", "babyelephants"],
+                  "fatfuck": ["Fatraccoonhate", "fatsquirrelhate"],
+                  "ferret": ["ferrets"],
+                  "frog": ["frogs"],
+                  "gecko": ["leopardgeckos", "geckos"],
+                  "hedgehog": ["Hedgehog", "Hedgehogs"],
+                  "insect": ["insectporn"],
+                  "moth": ["moths"],
+                  "octopus": ["octopus"],
+                  "otter": ["otters"],
+                  "owl": ["thesuperbowl"],
+                  "panda": ["panda", "pandas"],
+                  "penguin": ["penguin"],
+                  "possum": ["possums", "opossums"],
+                  "quokka": ["quokka"],
+                  "red panda": ["redpandas"],
+                  "reptile": ["reptiles"],
+                  "shark": ["shark", "sharks"],
+                  "sloth": ["sloths"],
+                  "snail": ["snails"],
+                  "snake": ["SnakesWearingHats", "Snakeswithhats"],
+                  "turtle": ["turtle", "TurtlesOnAlligators", "TurtlesWithJobs"]
+                  }
 
 
 class Utility(commands.Cog):
@@ -42,7 +78,7 @@ class Utility(commands.Cog):
             logging.error('Random with max digit count %s failed. Arg: %s', len(str(arg)), arg)
 
     async def getFlickrImage(self, tag):
-        extras = ["url_c", "url_z", "url_m", "url_l", "url_k", "url_o"]
+        extras = ["url_o", "url_b", "url_c", "url_z", "url", "url_w"]
         page = random.randint(1, 30)
         query = self.flickr.photos.search(text=tag,
                                           page=page,
@@ -53,76 +89,90 @@ class Utility(commands.Cog):
         photos = query["photos"]
         url = None
         permalink = "https://www.flickr.com/photos/" + photos["photo"][0]["owner"] + "/" + photos["photo"][0]["id"]
+        title = photos["photo"][0]["title"]
         for url_attr in extras:
             try:
                 url = photos["photo"][0][url_attr]
                 break
             except KeyError:
                 pass
-        return url, permalink
+        return url, permalink, title
 
     async def getRedditImage(self, tag):
-        limit = 50
-        submissions = []
+        async def getSubredditPosts(time, post_limit):
+            subs = []
+            async for s in subreddit.top(time_filter=time, limit=post_limit):
+                d = {
+                    "is_self": s.is_self,
+                    "url": s.url,
+                    "permalink": s.permalink,
+                    "title": s.title
+                }
+                subs.append(d)
+            return subs
+
         subreddit = await self.reddit.subreddit(tag)
-        async for s in subreddit.top(time_filter="all", limit=limit):
-            d = {
-                "is_self": s.is_self,
-                "url": s.url,
-                "permalink": s.permalink
-            }
-            submissions.append(d)
+        if random.randint(0, 1) == 0:
+            time_filter = "all"
+            limit = 200
+        else:
+            time_filter = "month"
+            limit = 15
+
+        # Length of submissions is 0 when there are 0 posts in the last month. If so, get top posts of all time.
+        submissions = await getSubredditPosts(time=time_filter, post_limit=limit)
+        if len(submissions) == 0:
+            submissions = await getSubredditPosts(time="all", post_limit=200)
+
         url = None
         permalink = None
+        title = None
         reps = 0
         while url is None:
-            rnd = random.randint(0, limit - 1)
+            rnd = random.randint(0, len(submissions) - 1)
             if submissions[rnd]["url"][-3:] in ["jpg", "png"]:
                 url = submissions[rnd]["url"]
                 permalink = "https://www.reddit.com" + submissions[rnd]["permalink"]
+                title = submissions[rnd]["title"]
             reps += 1
             if reps > 200:
                 break
 
-        return url, permalink
+        return url, permalink, title
 
     @commands.command(aliases=["animal"],
                       brief="| Get cute (and not so cute) animal pictures.",
-                      help="Supported search terms:\n"
-                           "Bird, Quokka, Possum, Cat, Axolotl, Blahaj, Red Panda")
+                      help=f"Supported search terms:\n"
+                           f"{nl.join(accepted_terms.keys())}")
     async def img(self, ctx, *, arg):
         logging.info('Running image for %s', arg)
-        accepted_terms = {"bird": ["birds", "birdpics"],
-                          "quokka": ["quokka"],
-                          "possum": ["possums", "opossums"],
-                          "cat": ["cats", "catsareliquid", "illegallysmolcats", "tightpussy", "blurrycats"],
-                          "axolotl": ["axolotls"],
-                          "blahaj": ["blahaj"],
-                          "haj": ["blahaj"],
-                          "red panda": ["redpandas"]
-                          }
-        try:
-            arg = arg.lower()
-            if arg in accepted_terms:
-                if random.randint(0, 3) == 0:
-                    if arg == "haj":
-                        arg = "blahaj"
-                    url, permalink = await self.getFlickrImage(arg)
-                else:
+
+        close_matches = get_close_matches(arg.lower(), accepted_terms)
+        if len(close_matches) == 0:
+            logging.error("No close match for %s", arg)
+            await ctx.send("Could not find a good match for the search term")
+        else:
+            arg = str(close_matches[0])
+            try:
+                method = random.randint(0, 1)
+                if arg in ["fatfuck", "snake"]:
+                    method = 1
+                if method == 0:
+                    url, permalink, title = await self.getFlickrImage(arg)
+                elif method == 1:
                     sub = random.choice(accepted_terms[arg])
-                    url, permalink = await self.getRedditImage(sub)
+                    url, permalink, title = await self.getRedditImage(sub)
                 if url is not None:
-                    embed = discord.Embed(title=arg)
-                    embed.description = f"[Link]({permalink})"
+                    embed = discord.Embed()
+                    embed.description = f"[{title}]({permalink})"
                     embed.set_image(url=url)
                     await ctx.send(embed=embed)
                 else:
-                    await ctx.send("Error :(")
-            else:
-                logging.error('Invalid search tag %s', arg)
-                await ctx.send("Invalid search term")
-        except Exception as Argument:
-            logging.exception("Error occurred in img")
+                    logging.error("No url found")
+                    await ctx.send("Could not find a url. Sorry about that :(")
+            except Exception as Argument:
+                logging.exception("Error occurred in img")
+                await ctx.send("Error :(")
 
 
 def setup(bot):
