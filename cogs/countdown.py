@@ -1,6 +1,7 @@
 from discord.ext import commands
 import asyncio
 import logging
+import re
 
 
 def switch_countdown(argument):
@@ -17,11 +18,10 @@ def switch_countdown(argument):
 
 
 class Partytime(commands.Cog):
-
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=['cd', 'count', 'partytime'],
+    @commands.command(aliases=['cd', 'count', 'partytime', r"p*"],
                       brief="| A countdown for listening parties. 1hr (3600) max.",
                       help="A countdown for listening parties. 1hr (3600) max.")
     async def countdown(self, ctx, arg):
@@ -48,11 +48,11 @@ class Partytime(commands.Cog):
             await ctx.send("Please enter a number <=3600")
             logging.error('Invalid number %s.', arg)
 
-    @commands.command(aliases=['cdb', 'cbd','countbar' 'partytimebar', 'elsegetyourshittogether'],
+    @commands.command(aliases=['partytimebar', 'elsegetyourshittogether'],
                       brief="| A countdown for listening parties in bar chart style.",
                       help="A countdown for listening parties in bar chart style."
-                      " Set to 10 seconds.")
-    async def countdownbar(self, ctx):
+                           " Set to 10 seconds.")
+    async def barcountdown(self, ctx):
         logging.info('Bar countdown started.')
         msg_array = [":white_large_square:"] * 10
         msg_to_edit = await ctx.send("".join(msg_array))
@@ -61,6 +61,14 @@ class Partytime(commands.Cog):
             await msg_to_edit.edit(content="".join(msg_array))
             await asyncio.sleep(1)
         logging.info('Bar countdown ended.')
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        ctx = await self.bot.get_context(message)
+        success = re.match(r">>c\w*d\w*b\w*", message.content.lower())
+        if success:
+            await self.barcountdown(ctx)
+
 
 def setup(bot):
     bot.add_cog(Partytime(bot))
