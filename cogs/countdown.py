@@ -48,7 +48,7 @@ class Partytime(commands.Cog):
             await ctx.send("Please enter a number <=3600")
             logging.error('Invalid number %s.', arg)
 
-    @commands.command(aliases=['partytimebar', 'elsegetyourshittogether'],
+    @commands.command(aliases=['cdb', 'cbd', 'countbar' 'partytimebar', 'elsegetyourshittogether', 'cockdickballs'],
                       brief="| A countdown for listening parties in bar chart style.",
                       help="A countdown for listening parties in bar chart style."
                            " Set to 10 seconds.")
@@ -61,15 +61,6 @@ class Partytime(commands.Cog):
             await msg_to_edit.edit(content="".join(msg_array))
             await asyncio.sleep(1)
         logging.info('Bar countdown ended.')
-
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        ctx = await self.bot.get_context(message)
-        success = re.match(r">>c\w*d|b\w*b|d\w*", message.content.lower())
-        if message.content.lower() == ">>cbd":
-            await ctx.send("it's __**c**__ount__**d**__own __**b**__ar smh my head")
-        if success:
-            await self.barcountdown(ctx)
 
 
 def setup(bot):
