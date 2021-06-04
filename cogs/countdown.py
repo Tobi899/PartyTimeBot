@@ -65,7 +65,9 @@ class Partytime(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         ctx = await self.bot.get_context(message)
-        success = re.match(r">>c\w*d\w*b\w*", message.content.lower())
+        success = re.match(r">>c\w*d|b\w*b|d\w*", message.content.lower())
+        if message.content.lower() == ">>cbd":
+            await ctx.send("it's __**c**__ount__**d**__own __**b**__ar smh my head")
         if success:
             await self.barcountdown(ctx)
 
