@@ -1,5 +1,5 @@
 # PartyTimeBot
-A basic Discord bot with python
+A small discord bot for a music server
 
 ## Features:
 - Selfmutes
@@ -11,3 +11,4 @@ A basic Discord bot with python
 - Utility
   - random
   - ping
+  - animal images
