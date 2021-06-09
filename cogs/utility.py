@@ -147,7 +147,7 @@ class Utility(commands.Cog):
     async def img(self, ctx, *, arg=None):
         logging.info('Running image for %s', arg)
         if not arg:
-            arg = random.choice(accepted_terms)
+            arg = random.choice(accepted_terms.keys())
         close_matches = get_close_matches(arg.lower(), accepted_terms)
         if len(close_matches) == 0:
             logging.error("No close match for %s", arg)
