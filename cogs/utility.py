@@ -144,7 +144,7 @@ class Utility(commands.Cog):
                       brief="| Get cute (and not so cute) animal pictures.",
                       help=f"Supported search terms:\n"
                            f"{nl.join(accepted_terms.keys())}")
-    async def img(self, ctx, *, arg):
+    async def img(self, ctx, *, arg=None):
         logging.info('Running image for %s', arg)
         if not arg:
             arg = random.choice(accepted_terms)
